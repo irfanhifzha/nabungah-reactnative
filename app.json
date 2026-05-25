@@ -30,6 +30,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.irfanhifzha.nabungah"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ae26baab-be4c-4bf6-b9cc-40375e7dc68c"
       }
     }
   }
