@@ -18,15 +18,64 @@ cara install di hp
 ```
 connect hp ke pc yg ada project ini
 
-npx expo prebuild 
--> nanti buat file ./android
+npx @react-native-community/cli init MyApp      // change MyApp
+-> nanti buat folder ./MyApp
 
 
-npx expo run:android
+cd MyApp
+
+npx react-native run-android
 -> nanti building app di android tsb
 ```
 
+---
 
+idk err mess
+
+```
+C:\Users\Windows 11\Downloads\nabungah-reactnative>npx react-native@latest init Nabungah
+Need to install the following packages:
+react-native@0.85.3
+Ok to proceed? (y) y
+
+🚨️ The `init` command is deprecated.
+
+- Switch to npx @react-native-community/cli init for the identical behavior.
+- Refer to the documentation for information about alternative tools: https://reactnative.dev/docs/getting-started
+Exiting...
+
+
+```
+
+
+
+```
+C:\Users\Windows 11\Downloads\nabungah-reactnative>npx react-native@latest run-android
+
+⚠️ react-native depends on @react-native-community/cli for cli commands. To fix update your package.json to include:
+
+
+  "devDependencies": {
+    "@react-native-community/cli": "latest",
+  }
+
+
+
+```
+
+
+```
+  
+  Run instructions for Android:
+    • Have an Android emulator running (quickest way to get started), or a device connected.
+    • cd "C:\Users\Windows 11\Downloads\nabungah-reactnative\Nabungah" && npx react-native run-android
+  
+  Run instructions for Windows:
+    • See https://microsoft.github.io/react-native-windows for the latest up-to-date instructions.
+    
+```
+
+---
 
 
 inginnya sih buat aplikasi untuk uang management system + todo singkat / tracking for (kegiatan) + tracking sakit app (react native - local db on device [dont have to sync])
