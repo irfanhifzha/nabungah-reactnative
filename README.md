@@ -77,6 +77,103 @@ C:\Users\Windows 11\Downloads\nabungah-reactnative>npx react-native@latest run-a
 
 ---
 
+try 1 (commit sebelumnya, npx run:android or smth)
+
+```
+
+  WARNING: You should run npx react-native@latest to ensure you're always using the most current version of the CLI. NPX has cached version (0.81.5) != current release (0.85.3)
+  
+
+🚨️ The `init` command is deprecated.
+
+- Switch to npx @react-native-community/cli init for the identical behavior.
+- Refer to the documentation for information about alternative tools: https://reactnative.dev/docs/getting-started
+Exiting...
+
+C:\Users\Windows 11\Downloads\nabungah-reactnative>npx react-native@latest init Nabungah
+Need to install the following packages:
+react-native@0.85.3
+Ok to proceed? (y) y
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\react-native',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\Windows 11\AppData\Local\npm-cache\_npx\dea611a43221eddd\node_modules\react-native\ReactCommon\react\renderer\core'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\react-native\\ReactCommon\\react\\renderer\\core'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\@react-native',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\Windows 11\AppData\Local\npm-cache\_npx\dea611a43221eddd\node_modules\@react-native\gradle-plugin\settings-plugin\src\main\kotlin\com\facebook'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\@react-native\\gradle-plugin\\settings-plugin\\src\\main\\kotlin\\com\\facebook'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\@react-native\\gradle-plugin',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\Windows 11\AppData\Local\npm-cache\_npx\dea611a43221eddd\node_modules\@react-native\gradle-plugin\settings-plugin\src\test'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\@react-native\\gradle-plugin\\settings-plugin\\src\\test'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\Windows 11\AppData\Local\npm-cache\_npx\dea611a43221eddd\node_modules\react-native\ReactCommon\react\renderer\components\switch'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\Windows 11\\AppData\\Local\\npm-cache\\_npx\\dea611a43221eddd\\node_modules\\react-native\\ReactCommon\\react\\renderer\\components\\switch'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error process terminated
+npm error signal SIGINT
+npm error A complete log of this run can be found in: C:\Users\Windows 11\AppData\Local\npm-cache\_logs\2026-05-26T10_43_28_543Z-debug-0.log
+Terminate batch job (Y/N)? n
+
+```
+
+
+try 2
+
+```
+[Incubating] Problems report is available at: file:///C:/Users/Windows%2011/Downloads/nabungah-reactnative/Nabungah/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+info 💡 Tip: Make sure that you have set up your development environment correctly, by running npx react-native doctor. To read more about doctor command visit: https://github.com/react-native-community/cli/blob/main/packages/cli-doctor/README.md#doctor 
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Class org.gradle.jvm.toolchain.JvmVendorSpec does not have member field 'org.gradle.jvm.toolchain.JvmVendorSpec IBM_SEMERU'
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 5m 24s
+error Failed to install the app. Command failed with exit code 1: gradlew.bat app:installDebug -PreactNativeDevServerPort=8081 FAILURE: Build failed with an exception. * What went wrong: Class org.gradle.jvm.toolchain.JvmVendorSpec does not have member field 'org.gradle.jvm.toolchain.JvmVendorSpec IBM_SEMERU' * Try: > Run with --stacktrace option to get the stack trace. > Run with --info or --debug option to get more log output. > Run with --scan to get full insights from a Build Scan (powered by Develocity). > Get more help at https://help.gradle.org. BUILD FAILED in 5m 24s.
+info Run CLI with --verbose flag for more details.
+
+
+```
+
+---
+
 
 inginnya sih buat aplikasi untuk uang management system + todo singkat / tracking for (kegiatan) + tracking sakit app (react native - local db on device [dont have to sync])
 
