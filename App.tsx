@@ -1,7 +1,7 @@
 import "./global.css";
 import { Image } from 'react-native';
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import { ScrollView, View, Text, TextInput, Pressable } from "react-native";
 
 import { useFinanceStore } from "@/store/financeStore";
 import { useTransactionStore } from "@/store/transactionStore";
@@ -34,6 +34,11 @@ export default function App() {
     loadWallets();
     loadTransactions();
   }, []);
+
+  const refreshData = async () => {
+    await loadWallets();
+    await loadTransactions();
+  };
 
   // Biar number viewable
   const formatIDR = (value: number) => new Intl.NumberFormat("id-ID").format(value);
@@ -68,23 +73,11 @@ export default function App() {
 
 
 
-  // WALLET BALANCE (starting balance + transactions)
-  const walletBalances = wallets.map((w) => {
-    const walletTx = transactions.filter((t) => t.wallet_id === w.id);
-
-    const income = walletTx
-      .filter((t) => t.type === "income")
-      .reduce((a, t) => a + Number(t.amount), 0);
-
-    const expense = walletTx
-      .filter((t) => t.type === "expense")
-      .reduce((a, t) => a + Number(t.amount), 0);
-
-    return {
-      ...w,
-      balance: Number(w.balance || 0) + income - expense,
-    };
-  });
+// USE REAL DB BALANCE ONLY
+const walletBalances = wallets.map((w) => ({
+  ...w,
+  balance: Number(w.balance || 0),
+}));
 
   // TOTALS
   const totalIncome = filteredTransactions
@@ -110,6 +103,8 @@ export default function App() {
       type,
     });
 
+    await refreshData(); // 🔥 important
+
     setTitle("");
     setAmount("");
   }
@@ -119,12 +114,22 @@ export default function App() {
 
     await addWallet(walletName, Number(walletBalance || 0));
 
+    await refreshData(); // 🔥 important
+
     setWalletName("");
     setWalletBalance("");
   }
 
   return (
-    <View className="flex-1 p-6 pt-12">
+    <ScrollView
+      className="flex-1 bg-white"
+      contentContainerStyle={{
+        padding: 24,
+        paddingTop: 48,
+        paddingBottom: 120,
+        flexGrow: 1,
+      }}
+    >
 
       <Image source={require('@/assets/icon.png')} style={{ width: 100, height: 100 }}
     />
@@ -319,7 +324,7 @@ export default function App() {
                     </Text>
 
                     <Text className={t.type === "income" ? "text-green-600" : "text-red-600"}>
-                      {t.type} - Rp {t.amount}
+                      {t.type} - Rp {formatIDR(t.amount)}
                     </Text>
 
                     <Pressable
@@ -335,6 +340,6 @@ export default function App() {
           ))}
       </View>
 
-    </View>
+    </ScrollView>
   );
 }

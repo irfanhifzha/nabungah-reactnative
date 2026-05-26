@@ -20,20 +20,42 @@ export async function createTransaction(data: {
   const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const createdAt = new Date().toISOString();
 
-  await db.runAsync(
-    `INSERT INTO transactions
-     (id, wallet_id, title, amount, type, note, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      data.wallet_id,
-      data.title,
-      data.amount,
-      data.type,
-      data.note ?? null,
-      createdAt,
-    ]
-  );
+  try {
+    await db.execAsync("BEGIN TRANSACTION");
+
+    // INSERT TRANSACTION
+    await db.runAsync(
+      `INSERT INTO transactions
+      (id, wallet_id, title, amount, type, note, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        data.wallet_id,
+        data.title,
+        data.amount,
+        data.type,
+        data.note ?? null,
+        createdAt,
+      ]
+    );
+
+    // UPDATE WALLET BALANCE
+    const operator = data.type === "income" ? "+" : "-";
+
+    await db.runAsync(
+      `
+      UPDATE wallets
+      SET balance = balance ${operator} ?
+      WHERE id = ?
+      `,
+      [data.amount, data.wallet_id]
+    );
+
+    await db.execAsync("COMMIT");
+  } catch (error) {
+    await db.execAsync("ROLLBACK");
+    throw error;
+  }
 }
 
 export async function getTransactions(): Promise<Transaction[]> {
@@ -45,8 +67,42 @@ export async function getTransactions(): Promise<Transaction[]> {
 }
 
 export async function removeTransaction(id: string) {
-  await db.runAsync(
-    "DELETE FROM transactions WHERE id = ?",
-    [id]
-  );
+  try {
+    await db.execAsync("BEGIN TRANSACTION");
+
+    // GET TRANSACTION
+    const transaction = await db.getFirstAsync<Transaction>(
+      "SELECT * FROM transactions WHERE id = ?",
+      [id]
+    );
+
+    if (!transaction) {
+      await db.execAsync("ROLLBACK");
+      return;
+    }
+
+    // RESTORE BALANCE
+    const operator =
+      transaction.type === "income" ? "-" : "+";
+
+    await db.runAsync(
+      `
+      UPDATE wallets
+      SET balance = balance ${operator} ?
+      WHERE id = ?
+      `,
+      [transaction.amount, transaction.wallet_id]
+    );
+
+    // DELETE TRANSACTION
+    await db.runAsync(
+      "DELETE FROM transactions WHERE id = ?",
+      [id]
+    );
+
+    await db.execAsync("COMMIT");
+  } catch (error) {
+    await db.execAsync("ROLLBACK");
+    throw error;
+  }
 }

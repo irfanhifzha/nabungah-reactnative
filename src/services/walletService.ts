@@ -24,35 +24,11 @@ export async function createWallet(name: string, balance: number = 0) {
 
 // GET WALLETS
 export async function getWallets(): Promise<Wallet[]> {
-
-  const wallets = await db.getAllAsync<any>(
+  const wallets = await db.getAllAsync<Wallet>(
     "SELECT * FROM wallets ORDER BY created_at DESC"
   );
 
-  const transactions = await db.getAllAsync<any>(
-    "SELECT * FROM transactions"
-  );
-
-
-  const result = wallets.map((w) => {
-    const walletTx = transactions.filter((t) => t.wallet_id === w.id);
-
-    const income = walletTx
-      .filter((t) => t.type === "income")
-      .reduce((a, t) => a + Number(t.amount), 0);
-
-    const expense = walletTx
-      .filter((t) => t.type === "expense")
-      .reduce((a, t) => a + Number(t.amount), 0);
-
-    return {
-      ...w,
-      balance: Number(w.balance || 0) + income - expense,
-    };
-  });
-
-
-  return result;
+  return wallets;
 }
 
 // DELETE WALLET
