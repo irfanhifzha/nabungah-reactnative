@@ -11,8 +11,21 @@ npm install
 
 npx expo start
 
-npm build?? // ga tau caranya
 ```
+
+cara install di hp
+
+```
+connect hp ke pc yg ada project ini
+
+npx expo prebuild 
+-> nanti buat file ./android
+
+
+npx expo run:android
+-> nanti building app di android tsb
+```
+
 
 
 
