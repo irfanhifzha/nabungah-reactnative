@@ -1,344 +1,343 @@
 import "./global.css";
-import { Image } from 'react-native';
-import { useEffect, useState } from "react";
-import { ScrollView, View, Text, TextInput, Pressable } from "react-native";
+import { Image, ScrollView, View, Text, Pressable } from "react-native";
+import { useEffect, useMemo, useState } from "react";
 
 import { useFinanceStore } from "@/store/financeStore";
 import { useTransactionStore } from "@/store/transactionStore";
-
 import { initDatabase } from "@/database/init";
 
+// MODALS (same concept as web)
+// import AddWalletModal from "@/components/modals/AddWalletModal";
+import TransactionModal from "@/components/modals/TransactionModal";
+// import DeleteWalletModal from "@/components/modals/DeleteWalletModal";
+// import DeleteTrxModal from "@/components/modals/DeleteTrxModal";
+// import MonthSyncModal from "@/components/modals/MonthSyncModal";
+
 export default function App() {
+  // =====================
+  // STORE
+  // =====================
   const wallets = useFinanceStore((s) => s.wallets);
   const loadWallets = useFinanceStore((s) => s.loadWallets);
-  const addWallet = useFinanceStore((s) => s.addWallet);
   const removeWallet = useFinanceStore((s) => s.removeWallet);
 
   const transactions = useTransactionStore((s) => s.transactions);
   const loadTransactions = useTransactionStore((s) => s.loadTransactions);
-  const addTransaction = useTransactionStore((s) => s.addTransaction);
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
 
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [walletId, setWalletId] = useState("");
-  const [type, setType] = useState<"income" | "expense">("expense");
+  // =====================
+  // LOCAL STATE (WEB STYLE)
+  // =====================
+  const [selectedQuickAction, setSelectedQuickAction] = useState<any>(null);
+  const [trxMonthFilter, setTrxMonthFilter] = useState("all");
+  const [trxTypeFilter, setTrxTypeFilter] = useState("all");
+  const [trxLimit, setTrxLimit] = useState(10);
 
-  const [walletName, setWalletName] = useState("");
-  const [walletBalance, setWalletBalance] = useState("");
+  // MODALS
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showTrxModal, setShowTrxModal] = useState(false);
+  const [showDeleteWalletModal, setShowDeleteWalletModal] = useState(false);
+  const [showDeleteTrxModal, setShowDeleteTrxModal] = useState(false);
+  const [showMonthSyncModal, setShowMonthSyncModal] = useState(false);
 
-  const [selectedMonth, setSelectedMonth] = useState("all");
-
+  // =====================
+  // INIT
+  // =====================
   useEffect(() => {
     initDatabase();
     loadWallets();
     loadTransactions();
   }, []);
 
-  const refreshData = async () => {
-    await loadWallets();
-    await loadTransactions();
-  };
+  // =====================
+  // FORMAT
+  // =====================
+  const formatIDR = (v: number) =>
+    new Intl.NumberFormat("id-ID").format(v || 0);
 
-  // Biar number viewable
-  const formatIDR = (value: number) => new Intl.NumberFormat("id-ID").format(value);
-  const formatNumber = (value: string) => {
-    const clean = value.replace(/\D/g, "");
-    if (!clean) return "";
-    return new Intl.NumberFormat("id-ID").format(Number(clean));
-  };
+  // =====================
+  // MONTH SYSTEM (WEB STYLE)
+  // =====================
+  const monthId = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
 
-  // MONTH LIST
-  const availableMonths = [
-    "all",
-    ...Array.from(
-      new Set(
-        transactions.map((t) => {
-          const d = new Date(t.created_at);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        })
-      )
-    ).sort().reverse(),
-  ];
+  const availableMonths = useMemo(() => {
+    const set = new Set(
+      transactions.map((t) => {
+        const d = new Date(t.created_at);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      })
+    );
+    return ["all", ...Array.from(set).sort().reverse()];
+  }, [transactions]);
 
-  // FILTER
-  const filteredTransactions =
-    selectedMonth === "all"
-      ? transactions
-      : transactions.filter((t) => {
-          const d = new Date(t.created_at);
-          const id = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-          return id === selectedMonth;
-        });
+  // =====================
+  // FILTERED TRANSACTIONS (WEB LOGIC)
+  // =====================
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      const d = new Date(t.created_at);
+      const id = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
+      const matchMonth = trxMonthFilter === "all" || id === trxMonthFilter;
+      const matchType = trxTypeFilter === "all" || t.type === trxTypeFilter;
 
+      return matchMonth && matchType;
+    });
+  }, [transactions, trxMonthFilter, trxTypeFilter]);
 
-// USE REAL DB BALANCE ONLY
-const walletBalances = wallets.map((w) => ({
-  ...w,
-  balance: Number(w.balance || 0),
-}));
+  const displayedTransactions = useMemo(() => {
+    return filteredTransactions.slice(0, trxLimit);
+  }, [filteredTransactions, trxLimit]);
 
-  // TOTALS
-  const totalIncome = filteredTransactions
-    .filter((t) => t.type === "income")
-    .reduce((a, t) => a + Number(t.amount), 0);
-
-  const totalExpense = filteredTransactions
-    .filter((t) => t.type === "expense")
-    .reduce((a, t) => a + Number(t.amount), 0);
-
-  const totalBalance = walletBalances.reduce(
-    (acc, w) => acc + Number(w.balance || 0),
-    0
+  // =====================
+  // TOTALS (WEB STYLE)
+  // =====================
+  const totalBalance = useMemo(
+    () => wallets.reduce((a, w) => a + Number(w.balance || 0), 0),
+    [wallets]
   );
 
-  async function handleAddTransaction() {
-    if (!title || !amount || !walletId) return;
+  const totalIncome = useMemo(
+    () =>
+      filteredTransactions
+        .filter((t) => t.type === "income")
+        .reduce((a, t) => a + Number(t.amount), 0),
+    [filteredTransactions]
+  );
 
-    await addTransaction({
-      wallet_id: walletId,
-      title,
-      amount: Number(amount),
-      type,
-    });
+  const totalExpense = useMemo(
+    () =>
+      filteredTransactions
+        .filter((t) => t.type === "expense")
+        .reduce((a, t) => a + Number(t.amount), 0),
+    [filteredTransactions]
+  );
 
-    await refreshData(); // 🔥 important
+  const feePercent = 2.5;
+  const feeExpense = Math.round((totalIncome * feePercent) / 100);
 
-    setTitle("");
-    setAmount("");
-  }
-
-  async function handleAddWallet() {
-    if (!walletName) return;
-
-    await addWallet(walletName, Number(walletBalance || 0));
-
-    await refreshData(); // 🔥 important
-
-    setWalletName("");
-    setWalletBalance("");
-  }
+  // =====================
+  // QUICK ACTION (LOCAL LIKE FIRESTORE VERSION)
+  // =====================
+  const quickActions = useMemo(() => {
+    return [
+      { id: "1", title: "Coffee", amount: 15000, type: "expense" },
+      { id: "2", title: "Salary", amount: 5000000, type: "income" },
+      { id: "3", title: "Salary", amount: 5000000, type: "income" },
+      { id: "4", title: "Salary", amount: 5000000, type: "income" },
+    ];
+  }, []);
 
   return (
-    <ScrollView
-      className="flex-1 bg-white"
-      contentContainerStyle={{
-        padding: 24,
-        paddingTop: 48,
-        paddingBottom: 120,
-        flexGrow: 1,
-      }}
-    >
+    <ScrollView className="flex-1 bg-[#f5f7fb] p-4">
 
-      <Image source={require('@/assets/icon.png')} style={{ width: 100, height: 100 }}
-    />
+    <View className="bg-white p-8 rounded-2xl m-8 mt-[80px]">
 
-      {/* WALLET SECTION */}
-      <View className="mt-4 border border-black p-6 rounded-2xl">
-        <Text className="font-bold text-lg mb-4">Wallets</Text>
+      {/* HEADER */}
+      <View className="flex-row justify-start gap-5 items-center mb-4">
+        <Image source={require("@/assets/icon.png")} style={{ width: 32, height: 32 }} />
 
-        {/* ADD WALLET */}
-        <TextInput
-          placeholder="Wallet name"
-          value={walletName}
-          onChangeText={setWalletName}
-          className="border p-2 rounded mb-2"
-        />
+        <Text>Halo 👋</Text>
+      </View>
 
-        <TextInput
-          placeholder="Starting balance"
-          value={formatNumber(walletBalance)}
-          onChangeText={(text) => {
-            const clean = text.replace(/\D/g, "");
-            setWalletBalance(clean);
-          }}
-          keyboardType="numeric"
-          className="border p-2 rounded mb-2"
-        />
+      {/* ===================== WALLET ===================== */}
+      <View className="bg-white border rounded-2xl p-4 mb-4">
+        <View className="flex-row justify-between mb-3">
+          <Text className="text-xl font-bold">Wallets</Text>
 
-        <Pressable
-          onPress={handleAddWallet}
-          className="bg-black p-3 rounded mb-4"
-        >
-          <Text className="text-white text-center">Add Wallet</Text>
-        </Pressable>
+          <Pressable  onPress={() => setShowWalletModal(true)}>
+            <Text className="bg-black text-white font-bold px-4 py-2 rounded-2xl">+ New</Text>
+          </Pressable>
+        </View>
 
-        {walletBalances.map((w) => (
-          <View key={w.id} className="p-3 border rounded mb-2 relative">
+        {wallets.map((w) => (
+          <View key={w.id} className="mb-2">
+            <Text className="text-gray-500">{w.name}</Text>
+            <Text className="text-xl font-bold">
+              Rp {formatIDR(w.balance)}
+            </Text>
+          </View>
+        ))}
+      </View>
 
-            <Text className="font-bold text-lg">{w.name}</Text>
-            <Text>Rp {formatIDR(w.balance)}</Text>
+      {/* ===================== QUICK ACTIONS (WEB STYLE) ===================== */}
+      <View className="bg-white border rounded-2xl p-4 mb-4">
+
+        <View className="flex-row justify-between mb-3">
+          <Text className="text-xl font-bold">Quick Actions</Text>
+
+          <Pressable onPress={() => setShowTrxModal(true)}>
+            <Text className="bg-black text-white font-bold px-4 py-2 rounded-2xl">+ New</Text>
+          </Pressable>
+        </View>
+
+        <View className="flex-row flex-wrap -mx-1">
+          {quickActions.map((q) => (
+            <Pressable
+              key={q.id}
+              onPress={() => {
+                setSelectedQuickAction(q);
+                setShowTrxModal(true);
+              }}
+              className="w-1/2 px-1 mb-2"
+            >
+              <View className="border p-3 rounded-xl">
+                <Text className="font-semibold">{q.title}</Text>
+
+                <Text className={q.type === "income" ? "text-green-500" : "text-red-500"}>
+                  {q.type === "income" ? "+" : "-"} Rp {formatIDR(q.amount)}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+
+
+      </View>
+
+
+
+      {/* ===================== RECENT TRANSACTIONS (WEB STYLE) ===================== */}
+      <View className="bg-white border rounded-2xl p-4 mb-4">
+
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-xl font-bold">Recent Transactions</Text>
+
+          <Pressable onPress={() => setShowTrxModal(true)}>
+            <Text className="bg-black text-white font-bold px-4 py-2 rounded-2xl">+ Add</Text>
+          </Pressable>
+        </View>
+
+        {/* FILTERS */}
+        <View className="flex-row gap-2 mb-3">
+
+          <Pressable
+            onPress={() => setTrxMonthFilter("all")}
+            className="border px-2 py-1 rounded"
+          >
+            <Text>All</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setTrxTypeFilter("income")}
+            className="border px-2 py-1 rounded"
+          >
+            <Text>Income</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setTrxTypeFilter("expense")}
+            className="border px-2 py-1 rounded"
+          >
+            <Text>Expense</Text>
+          </Pressable>
+        </View>
+
+        <Text className="text-xs text-gray-400 mb-2">
+          Showing {displayedTransactions.length} of {filteredTransactions.length}
+        </Text>
+
+        {displayedTransactions.map((trx) => (
+          <View key={trx.id} className="border p-3 rounded-xl mb-2 relative">
+
+            <Text className="font-semibold">{trx.title}</Text>
+
+            <Text className="text-xs text-gray-500">
+              {new Date(trx.created_at).toLocaleString()}
+            </Text>
+
+            <Text className={trx.type === "income" ? "text-green-500" : "text-red-500"}>
+              {trx.type} Rp {formatIDR(trx.amount)}
+            </Text>
 
             <Pressable
-              onPress={() => removeWallet(w.id)}
-              className="absolute right-2 top-2 border border-red-700 bg-white-500 px-2 py-1 rounded"
+              onPress={() => deleteTransaction(trx.id)}
+              className="absolute right-2 top-2"
             >
-              <Text className="text-xs">🗑️</Text>
+              <Text>🗑️</Text>
             </Pressable>
 
           </View>
         ))}
       </View>
 
-      {/* DASHBOARD */}
-      <View className="mt-4 border border-black p-6 rounded-2xl">
-        <Text className="font-bold text-lg mb-2">
-          Overview ({selectedMonth})
+
+            {/* ===================== MONTHLY OVERVIEW ===================== */}
+      <View className="bg-white border rounded-2xl p-4 mb-4">
+
+        <Text className="text-xl font-bold">Monthly Overview</Text>
+        <Text className="text-gray-500 mb-4 mt-2">{monthId}</Text>
+
+        <Text>Balance: Rp {formatIDR(totalBalance)}</Text>
+        <Text className="text-green-500">Income: +Rp {formatIDR(totalIncome)}</Text>
+        <Text className="text-red-500">Expense: -Rp {formatIDR(totalExpense)}</Text>
+        <Text className="text-purple-500">
+          Fee ({feePercent}%): Rp {formatIDR(feeExpense)}
         </Text>
-
-        <View className="flex-row flex-wrap gap-2 mb-3">
-          {availableMonths.map((m) => (
-            <Pressable
-              key={m}
-              onPress={() => setSelectedMonth(m)}
-              className={`px-3 py-1 border rounded ${
-                selectedMonth === m ? "bg-black" : ""
-              }`}
-            >
-              <Text className={selectedMonth === m ? "text-white" : ""}>
-                {m}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <Text className="text-green-600">
-          Income: Rp {formatIDR(totalIncome)}
-        </Text>
-
-        <Text className="text-red-600">
-          Expense: Rp {formatIDR(totalExpense)}
-        </Text>
-
-        <Text className="font-bold mt-2 text-lg">
-          Balance: Rp {formatIDR(totalBalance)},-
-        </Text>
-      </View>
-
-      {/* ADD TRANSACTION */}
-      <View className="mt-4 border border-black p-6 rounded-2xl">
-
-        <Text className="text-xl font-bold mb-4">
-          Add Transaction
-        </Text>
-
-        {/* TYPE */}
-        <View className="flex-row gap-2 mb-3">
-          <Pressable
-            onPress={() => setType("expense")}
-            className={`flex-1 p-2 rounded border ${
-              type === "expense" ? "bg-red-500" : ""
-            }`}
-          >
-            <Text className={type === "expense" ? "text-white text-center" : "text-center"}>
-              Expense
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setType("income")}
-            className={`flex-1 p-2 rounded border ${
-              type === "income" ? "bg-green-500" : ""
-            }`}
-          >
-            <Text className={type === "income" ? "text-white text-center" : "text-center"}>
-              Income
-            </Text>
-          </Pressable>
-        </View>
-
-        <TextInput
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          className="border p-2 rounded mb-2"
-        />
-
-        <TextInput
-          placeholder="Harga / Amount"
-          value={formatNumber(amount)}
-          onChangeText={(text) => {
-            const clean = text.replace(/\D/g, "");
-            setAmount(clean);
-          }}
-          keyboardType="numeric"
-          className="border p-2 rounded mb-2"
-        />
-
-        
-
-        <Text className="mb-2 font-semibold mt-2">Select Wallet</Text>
-
-        {walletBalances.map((w) => (
-          <Pressable
-            key={w.id}
-            onPress={() => setWalletId(w.id)}
-            className={`p-3 border rounded mb-2 ${
-              walletId === w.id ? "bg-black" : ""
-            }`}
-          >
-            <Text className={walletId === w.id ? "text-white" : ""}>
-              {w.name}
-            </Text>
-          </Pressable>
-        ))}
 
         <Pressable
-          onPress={handleAddTransaction}
-          className="bg-black p-3 rounded mt-2"
+          onPress={() => setShowMonthSyncModal(true)}
+          className="bg-black p-3 rounded-xl mt-3"
         >
-          <Text className="text-white text-center">
-            Add Transaction
-          </Text>
+          <Text className="text-white text-center">Sync Month</Text>
         </Pressable>
       </View>
 
-      {/* TRANSACTIONS */}
-      <View className="mt-4 border border-black p-6 rounded-2xl">
-        <Text className="text-lg font-bold">Transactions</Text>
+      {/* =========================
+      MONTH HISTORY (LOCAL SNAPSHOT)
+      ========================= */}
+      <View className="bg-white border p-4 rounded-2xl mb-4">
+        <Text className="text-xl font-bold mb-2">Monthly History</Text>
 
-        {Object.keys(
-          filteredTransactions.reduce((groups, t) => {
-            const date = new Date(t.created_at).toISOString().split("T")[0];
-            if (!groups[date]) groups[date] = [];
-            groups[date].push(t);
-            return groups;
-          }, {} as Record<string, typeof transactions>)
-        )
-          .sort((a, b) => (a < b ? 1 : -1))
-          .map((date) => (
-            <View key={date} className="mt-4">
-              <Text className="text-sm font-bold text-gray-500 mb-2">
-                {date}
-              </Text>
-
-              {filteredTransactions
-                .filter((t) => t.created_at.startsWith(date))
-                .map((t) => (
-                  <View key={t.id} className="border p-3 mb-2 rounded">
-                    <Text className="font-bold">{t.title}</Text>
-
-                    <Text className="text-xs text-gray-500">
-                      {new Date(t.created_at).toLocaleString()}
-                    </Text>
-
-                    <Text className={t.type === "income" ? "text-green-600" : "text-red-600"}>
-                      {t.type} - Rp {formatIDR(t.amount)}
-                    </Text>
-
-                    <Pressable
-                      onPress={() => deleteTransaction(t.id)}
-                      className="absolute right-2 top-2 border border-red-700 bg-white-500 px-2 py-1 rounded"
-                    >
-                      <Text className="text-xs">🗑️</Text>
-                    </Pressable>
-
-                  </View>
-                ))}
-            </View>
-          ))}
+        <Text className="text-gray-400 text-xs">
+          (you can connect this to local DB table "monthly snapshots")
+        </Text>
       </View>
+
+      {/* ===================== MODALS ===================== */}
+
+      {/* <AddWalletModal open={showWalletModal} onClose={() => setShowWalletModal(false)} /> */}
+
+      <TransactionModal
+        open={showTrxModal}
+        onClose={() => {
+          setShowTrxModal(false);
+          setSelectedQuickAction(null);
+        }}
+        wallets={wallets}
+        quickAction={selectedQuickAction}
+      />
+{/* 
+      <DeleteWalletModal
+        open={showDeleteWalletModal}
+        onClose={() => setShowDeleteWalletModal(false)}
+        wallets={wallets}
+      />
+
+      <DeleteTrxModal
+        open={showDeleteTrxModal}
+        onClose={() => setShowDeleteTrxModal(false)}
+        transactions={transactions}
+      />
+
+      <MonthSyncModal
+        open={showMonthSyncModal}
+        onClose={() => setShowMonthSyncModal(false)}
+        data={{
+          month: monthId,
+          totalBalance,
+          totalIncome,
+          totalExpense,
+          feePercent,
+          feeExpense,
+        }}
+      /> */}
+
+    </View>
 
     </ScrollView>
   );
