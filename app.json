@@ -32,6 +32,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.irfanhifzha.nabungah"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1bc7f26b-b090-4d8d-bd38-f837d96edad4"
+      }
     }
   }
 }
